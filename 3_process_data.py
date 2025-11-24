@@ -21,6 +21,8 @@ try:
     from bs4 import BeautifulSoup
     from mailparser_reply import EmailReplyParser
     from pypdf import PdfReader
+    import pytesseract
+    from pdf2image import convert_from_path
 except ImportError as e:
     print(f"Error importing libraries: {e}")
     print("Please run: pip install -r requirements.txt")
@@ -59,10 +61,12 @@ def extract_pure_email(header_value):
 def extract_text_from_pdf(pdf_path):
     """
     Extracts text from a PDF file.
-    Returns (text, is_image_only_suspicion)
+    Tries native extraction first. If that fails (scanned doc), falls back to OCR.
+    Returns (text, was_ocr_performed)
     """
     text_content = []
     try:
+        # 1. Attempt Native Extraction
         reader = PdfReader(pdf_path)
         for page in reader.pages:
             extracted = page.extract_text()
@@ -71,11 +75,33 @@ def extract_text_from_pdf(pdf_path):
         
         full_text = "\n".join(text_content).strip()
         
+        # 2. Check for "Image Only" Suspicion (OCR Trigger)
+        # If we have pages but almost no text, it's likely a scan.
         is_image_only = False
-        if len(reader.pages) > 0 and len(full_text) < 50:
+        if len(reader.pages) > 0 and len(full_text) < 100:
             is_image_only = True
             
-        return full_text, is_image_only
+        if is_image_only:
+            print(f"    [OCR] Detected scanned PDF ({len(full_text)} chars). Starting OCR on: {os.path.basename(pdf_path)}...")
+            try:
+                # Convert PDF to images (requires poppler)
+                images = convert_from_path(pdf_path)
+                ocr_text = []
+                for i, image in enumerate(images):
+                    # Extract text from image (requires tesseract)
+                    # 'dan+eng' tries both Danish and English
+                    page_text = pytesseract.image_to_string(image, lang='dan+eng')
+                    ocr_text.append(page_text)
+                
+                full_text = "\n".join(ocr_text).strip()
+                print(f"    [OCR] Completed. Extracted {len(full_text)} chars.")
+                return full_text, True
+                
+            except Exception as ocr_e:
+                print(f"    [OCR] Failed: {ocr_e}. Falling back to empty/native text.")
+                return full_text, False # Return whatever native text we found
+            
+        return full_text, False
     except Exception as e:
         print(f"Warning: Failed to parse PDF {pdf_path}: {e}")
         return "", False
@@ -218,16 +244,16 @@ def process_thread(thread_file):
             is_image_pdf = False
             
             if file_path.lower().endswith('.pdf'):
-                text, is_image = extract_text_from_pdf(file_path)
+                text, was_ocr_performed = extract_text_from_pdf(file_path)
                 
-                if is_image:
-                    print(f"  [WARN] Image-only PDF: {filename}")
-                    is_image_pdf = True
-                elif text.strip():
+                if text.strip():
                     txt_path = file_path + "_to_text.txt"
                     with open(txt_path, 'w', encoding='utf-8') as f:
                         f.write(text)
                     has_text_file = True
+
+                if was_ocr_performed:
+                     is_image_pdf = True
 
             att_obj = {
                 "filename": filename,

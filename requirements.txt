@@ -6,3 +6,6 @@ git+https://github.com/simplenotezy/mail-parser-reply.git
 pypdf
 pandas
 python-dateutil
+pytesseract
+pdf2image
+Pillow

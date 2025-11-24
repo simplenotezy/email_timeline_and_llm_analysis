@@ -17,12 +17,16 @@ The system follows a **Fetch-then-Process** architecture to ensure robustness an
     - Python 3.9+
     - A Google Cloud Project with **Gmail API** enabled.
     - `oauth-credentials.json` (Desktop App client ID) placed in this folder.
+    - **System Dependencies (for OCR)**:
+      ```bash
+      brew install tesseract poppler
+      ```
 
 2.  **Install Dependencies**:
     ```bash
     pip install -r requirements.txt
     ```
-    _Note: This installs a custom fork of `mail-parser-reply` with improved Danish language support._
+    _Note: This installs `pytesseract`, `pdf2image`, and a custom fork of `mail-parser-reply`._
 
 ## Usage
 
@@ -47,7 +51,7 @@ python 2_fetch_data.py
 
 ### Step 3: Process Data
 
-Generates the clean output. No internet required.
+Generates the clean output. No internet required. Attempts native text extraction from PDFs first, falling back to OCR for scanned documents.
 
 ```bash
 python 3_process_data.py
