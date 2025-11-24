@@ -1,0 +1,17 @@
+# Format: email@address.com: Alias
+mattiassiofjellvang@gmail.com: Mattias
+m@fjellvang.dk: Mattias
+o@fjellvang.dk: Oliver
+k@fjellvang.dk: Kristoffer
+aleksander@fjellvang.dk: Aleksander
+julie@fjellvang.dk: Julie
+sophiesolling@hotmail.com: Sophie
+lykkeisabella@gmail.com: Lykke
+samuel.fjellvang@gmail.com: Samuel
+susanne.knygberg@gmail.com: Susanne
+randskov@mail.dk: Advokat Randskov
+lmr@cityadvokat.dk: Advokat Randskov
+MW@nrlaw.dk: Advokat Maryla
+nbs@nrlaw.dk: Nikoline (Adv.fm)
+hva@nrlaw.dk: Hanne (Adv.sek)
+re@nrlaw.dk: Agnes (Nyborg Rørdam)

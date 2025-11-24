@@ -235,7 +235,7 @@ def process_thread(thread_file):
             }
             if has_text_file:
                 att_obj["has_text_file"] = True
-                att_obj["text_file_path"] = file_path + ".txt"
+                att_obj["text_file_path"] = file_path + "_to_text.txt"
             
             if is_image_pdf:
                 att_obj["is_image_pdf"] = True

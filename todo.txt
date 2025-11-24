@@ -1,0 +1,3 @@
+- [ ] 19392cdf6a295f46 - it says Jeg kan alle forslået dage, but in trascript: "(Empty body / All text was repeated content)"
+- [ ] Should accept the WHOLE text block, (e.g. see mistake in MSG 192f81b0d0b44970)
+- [ ] Filter of irrelevant mails
