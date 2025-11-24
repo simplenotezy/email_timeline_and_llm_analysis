@@ -65,9 +65,34 @@ def extract_text_from_pdf(pdf_path):
     Returns (text, was_ocr_performed)
     """
     text_content = []
+    filename = os.path.basename(pdf_path)
+    
     try:
+        # 0. Pre-check for "Multipart PDF" (Garbage Header)
+        # Some email attachments are saved with MIME headers inside the file.
+        # We'll read the first few bytes to check.
+        with open(pdf_path, 'rb') as f:
+            header = f.read(1024)
+        
+        if b'%PDF-' not in header[:20] and b'%PDF-' in header:
+            print(f"  [PDF] Detected multipart header in {filename}. Fixing stream...")
+            # Find the start of the PDF
+            with open(pdf_path, 'rb') as f:
+                content = f.read()
+            
+            start_idx = content.find(b'%PDF-')
+            if start_idx > 0:
+                import io
+                # Use BytesIO instead of file path
+                pdf_file_obj = io.BytesIO(content[start_idx:])
+                reader = PdfReader(pdf_file_obj)
+            else:
+                reader = PdfReader(pdf_path)
+        else:
+            print(f"  [PDF] Processing: {filename}")
+            reader = PdfReader(pdf_path)
+
         # 1. Attempt Native Extraction
-        reader = PdfReader(pdf_path)
         for page in reader.pages:
             extracted = page.extract_text()
             if extracted:
@@ -82,28 +107,33 @@ def extract_text_from_pdf(pdf_path):
             is_image_only = True
             
         if is_image_only:
-            print(f"    [OCR] Detected scanned PDF ({len(full_text)} chars). Starting OCR on: {os.path.basename(pdf_path)}...")
+            print(f"    [OCR] Detected scanned PDF ({len(full_text)} chars). Starting OCR on: {filename}...")
             try:
                 # Convert PDF to images (requires poppler)
                 images = convert_from_path(pdf_path)
+                total_pages = len(images)
                 ocr_text = []
+                
                 for i, image in enumerate(images):
+                    print(f"      > OCR Processing Page {i+1}/{total_pages}...", end='\r', flush=True)
                     # Extract text from image (requires tesseract)
                     # 'dan+eng' tries both Danish and English
-                    page_text = pytesseract.image_to_string(image, lang='dan+eng')
+                    # Add timeout to avoid hanging indefinitely
+                    page_text = pytesseract.image_to_string(image, lang='dan+eng', timeout=60)
                     ocr_text.append(page_text)
                 
+                print(f"      > OCR Complete.                 ")
                 full_text = "\n".join(ocr_text).strip()
                 print(f"    [OCR] Completed. Extracted {len(full_text)} chars.")
                 return full_text, True
                 
             except Exception as ocr_e:
-                print(f"    [OCR] Failed: {ocr_e}. Falling back to empty/native text.")
+                print(f"\n    [OCR] Failed: {ocr_e}. Falling back to empty/native text.")
                 return full_text, False # Return whatever native text we found
             
         return full_text, False
     except Exception as e:
-        print(f"Warning: Failed to parse PDF {pdf_path}: {e}")
+        print(f"  [ERROR] Failed to parse PDF {filename}: {e}")
         return "", False
 
 def clean_email_body(payload):
