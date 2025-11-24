@@ -1,0 +1,8 @@
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+beautifulsoup4
+git+https://github.com/simplenotezy/mail-parser-reply.git
+pypdf
+pandas
+python-dateutil
