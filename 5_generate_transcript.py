@@ -295,7 +295,6 @@ def generate_transcripts():
             # Attachment Processing
             atts = msg.get("attachments", [])
             valid_att_filenames = []
-            valid_att_contents = [] # If text files exist
             
             for att in atts:
                 filepath = att.get("path")
@@ -373,16 +372,8 @@ def generate_transcripts():
                     dest_path = os.path.join(OUTPUT_ATT_DIR, final_filename)
                     shutil.copy2(source_path, dest_path)
 
-                    # Check for associated text file content (for inclusion IN TRANSCRIPT)
-                    text_content = ""
-                    if has_text:
-                         with open(source_path, 'r', encoding='utf-8') as f:
-                             text_content = f.read().strip()
-
                     # Add to list
                     valid_att_filenames.append(final_filename)
-                    if text_content:
-                        valid_att_contents.append(f"[Attachment Content: {final_filename}]\n{text_content}\n[End Attachment]")
             
             # --- Write to LLM Format ---
             if body_text or valid_att_filenames:
@@ -391,10 +382,6 @@ def generate_transcripts():
                     llm_entry += f" <Attachments: {', '.join(valid_att_filenames)}>"
                 
                 llm_output.append(llm_entry)
-                
-                # Append extracted text content from attachments immediately after reference
-                for content in valid_att_contents:
-                     llm_output.append(content)
 
             # --- Write to Human Format ---
             human_output.append(f"MSG ID: {msg_id}")

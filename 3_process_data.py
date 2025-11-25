@@ -100,6 +100,11 @@ def extract_text_from_pdf(pdf_path):
         
         full_text = "\n".join(text_content).strip()
         
+        # Optimize whitespace: replace multiple newlines with single newlines, 
+        # and multiple spaces with single spaces to make it compact.
+        full_text = re.sub(r'\n\s*\n', '\n', full_text)  # Merge multiple blank lines
+        full_text = re.sub(r'[ \t]+', ' ', full_text)    # Merge multiple spaces (but keep newlines)
+        
         # 2. Check for "Image Only" Suspicion (OCR Trigger)
         # If we have pages but almost no text, it's likely a scan.
         is_image_only = False
